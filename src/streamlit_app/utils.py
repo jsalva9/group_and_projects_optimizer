@@ -1,0 +1,5 @@
+castors_possible_names = ['Castors', 'CiLL', 'Castúdrigues', 'Castudrigues', 'Llúdrigues', 'castors', 'lludrigues']
+dainops_possible_names = ['LLiD', 'LliD', 'Dainops', 'Llops', 'llops', 'Daines', 'daines']
+ranguis_possible_names = ['RiNG', 'Ranguis', 'Ràngers', 'Rangers', 'Noies', 'Guia', 'rangers', 'ranguis']
+pios_possible_names = ['Pios', 'PiC', 'Pioners', 'pioners', 'caravel·les', 'carave', 'pios']
+truk_possible_names = ['truk', 'Truk', 'TRUK']
