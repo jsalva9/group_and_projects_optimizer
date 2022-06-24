@@ -83,6 +83,53 @@ class DataControl:
         self._transformed_inputs = {'preferences_unitats': preferences_unitats, 'preferences_caps': preferences_caps,
                                     'master_caps': master_caps, 'master_unitats': master_unitats}
 
+    def transform_from_app_inputs(self, scale_preferences=False):
+        master_caps = self._raw_inputs['caps_df']
+        master_unitats = self._raw_inputs['unitats_df']
+        preferences_caps = self._raw_inputs['caps_preferences_df']
+        preferences_unitats = self._raw_inputs['unitats_preferences_df']
+
+        master_caps.reset_index(drop=True, inplace=True)
+        master_unitats.reset_index(drop=True, inplace=True)
+
+        master_caps = master_caps.reset_index().rename(columns={'index': 'cap_id'})
+        master_unitats = master_unitats.reset_index().rename(columns={'index': 'unitat_id'})
+
+        # preferences_unitats.rename(columns={'unitat': 'unitat_to_evaluate'}, inplace=True)
+
+        # FillNA
+        master_caps['year'].fillna(1, inplace=True)
+        master_caps['gender'].fillna('NA', inplace=True)
+        master_caps['experience'].fillna('', inplace=True)
+        master_unitats['min_caps'] = master_unitats['min_caps'].fillna(1).astype(int)
+        master_unitats['max_caps'] = master_unitats['max_caps'].fillna(1e2).astype(int)
+
+        preferences_caps = preferences_caps.merge(master_caps[['cap', 'cap_id']], how='left', on='cap').merge(
+            master_caps[['cap', 'cap_id']].rename(columns={'cap': 'cap_to_evaluate', 'cap_id': 'cap_to_evaluate_id'}),
+            how='left', on='cap_to_evaluate').fillna(0)
+        preferences_unitats = preferences_unitats.merge(master_caps[['cap', 'cap_id']], how='left', on='cap').merge(
+            master_unitats[['unitat', 'unitat_id']].rename(
+                columns={'unitat': 'unitat_to_evaluate', 'unitat_id': 'unitat_to_evaluate_id'}), how='left',
+            on='unitat_to_evaluate').fillna(0)
+
+        if scale_preferences:
+            agg_preferences_unitats = preferences_unitats.groupby(['cap'], as_index=False).agg(
+                total_allocated=('preference', 'sum'))
+            preferences_unitats = preferences_unitats.merge(agg_preferences_unitats, how='left', on='cap')
+            preferences_unitats['preference'] = preferences_unitats['preference'] / preferences_unitats[
+                'total_allocated']
+            preferences_unitats.drop(columns=['total_allocated'], inplace=True)
+
+            agg_preferences_caps = preferences_caps.groupby(['cap'], as_index=False).agg(
+                total_allocated=('preference', 'sum'))
+            preferences_caps = preferences_caps.merge(agg_preferences_caps, how='left', on='cap')
+            preferences_caps['preference'] = preferences_caps['preference'] / preferences_caps[
+                'total_allocated']
+            preferences_caps.drop(columns=['total_allocated'], inplace=True)
+
+        self._transformed_inputs = {'preferences_unitats': preferences_unitats, 'preferences_caps': preferences_caps,
+                                    'master_caps': master_caps, 'master_unitats': master_unitats}
+
     def write_transformed(self) -> None:
         for table_name, table in self._transformed_inputs.items():
             table.to_csv(f'{self._config.transformed_data_directory}/{table_name}.csv', index=False)
@@ -96,6 +143,9 @@ class DataControl:
 
     def write_output(self, solution: Solution) -> None:
         solution.solution_table.to_csv(f'{self._config.output_directory}/solution.csv', index=False)
+
+    def set_raw_inputs(self, raw_inputs):
+        self._raw_inputs = raw_inputs
 
     @property
     def transformed_inputs(self) -> Dict[str, pd.DataFrame]:

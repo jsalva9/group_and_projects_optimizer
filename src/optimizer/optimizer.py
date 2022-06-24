@@ -2,8 +2,8 @@ import pandas as pd
 
 from typing import Tuple, Dict, List
 
-from src.optimizer.solution import Solution
-from src.optimizer.data_model import DataModel
+from optimizer.solution import Solution
+from optimizer.data_model import DataModel
 
 from ortools.sat.python import cp_model
 
