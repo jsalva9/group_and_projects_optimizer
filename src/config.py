@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-import yaml
+# import yaml
 
 
 class Config:
@@ -9,7 +9,17 @@ class Config:
     def __init__(self):
         root_path = self.get_project_root()
         config_filepath = f'{root_path}/config.yaml'
-        self.__config = self.read_config(config_filepath, use_yaml=True)
+        # self.__config = self.read_config(config_filepath, use_yaml=True)
+
+        self.__config = {
+            'execution': {'etl': True, 'optimizer': True},
+            'directories': {'data': 'data', 'raw': 'raw', 'transformed': 'transformed', 'output': 'output'},
+            'file_names': {
+                'preferences': 'Respostes formulari de la tria de caps - Respostes al formulari 1.csv',
+                'master': 'master.xlsx'
+            },
+            'optimization': {'equip_de_caps_weight': .5}
+        }
 
         self.__directories = self.__config["directories"]
         self._data_directory = f'{root_path}/{self.__directories["data"]}'
@@ -51,21 +61,21 @@ class Config:
         """Get the project root filepath"""
         return Path(__file__).parent.parent
 
-    @staticmethod
-    def read_config(config_filepath, use_yaml=False) -> dict:
-        """
-        Read a configuration YAML file containing configuration parameters
-
-        Args:
-            config_filepath: string containing the file path
-            use_yaml
-        Returns:
-            the config object
-        """
-        with open(config_filepath, "r") as config_file:
-            if use_yaml:
-                config_data = yaml.full_load(config_file)
-            else:
-                config_data = json.load(config_file)
-
-        return config_data
+    # @staticmethod
+    # def read_config(config_filepath, use_yaml=False) -> dict:
+    #     """
+    #     Read a configuration YAML file containing configuration parameters
+    #
+    #     Args:
+    #         config_filepath: string containing the file path
+    #         use_yaml
+    #     Returns:
+    #         the config object
+    #     """
+    #     with open(config_filepath, "r") as config_file:
+    #         if use_yaml:
+    #             config_data = yaml.full_load(config_file)
+    #         else:
+    #             config_data = json.load(config_file)
+    #
+    #     return config_data
