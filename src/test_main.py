@@ -21,4 +21,6 @@ if __name__ == '__main__':
 
     optimizer = Optimizer(config, data_control.transformed_inputs)
     solution = optimizer.run()
+    solution.print_equips()
+    solution.print_stats()
     print()

@@ -21,6 +21,3 @@ if __name__ == '__main__':
 
         data_control.write_output(solution)
 
-    # TODO: interactive optimization. Very user friendly. Does not rely on google docs.
-    # TODO: opti approach that defines a symmetric preferences matrix. Use the likelyhood that two people go together
-    # TODO: dash / streamlit visualizer

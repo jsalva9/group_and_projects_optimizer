@@ -5,8 +5,9 @@ import pandas as pd
 import streamlit as st
 
 
-def add_new_cap():
-    new_cap = st.session_state.new_cap
+def add_new_cap(new_cap=None):
+    if new_cap is None:
+        new_cap = st.session_state.new_cap
 
     # Update caps list
     st.session_state.caps.append(new_cap)
@@ -53,9 +54,11 @@ def reset_table(to_reset):
             st.session_state[element].drop(st.session_state[element].index, inplace=True)
 
 
-def insert_info(table_name, col_to_add, col_to_match, match, key, extra_col_to_match=None, extra_match=None):
-    element_to_add = st.session_state[key] if type(st.session_state[key]) is not list else ', '.join(
-        st.session_state[key])
+def insert_info(table_name, col_to_add, col_to_match, match, key=None, extra_col_to_match=None, extra_match=None,
+                value=None):
+    assert value is not None or key is not None, 'Both value and key are None when inserting info!'
+    element_to_add = st.session_state[key] if value is None else value
+    element_to_add = element_to_add if type(element_to_add) is not list else ', '.join(element_to_add)
     if extra_col_to_match is None:
         st.session_state[table_name].loc[
             st.session_state[table_name][col_to_match] == match, col_to_add] = element_to_add
@@ -89,7 +92,6 @@ def add_new_unitat(key=None, value=None):
 
 def insert_multi_select(cap, sign, key):
     preferences_list = st.session_state[key]
-    st.session_state.caps_preferences_df.loc[st.session_state.caps_preferences_df.cap == cap, 'preference'] = 0
     for cap_to_evaluate in preferences_list:
         st.session_state.caps_preferences_df.loc[
             (st.session_state.caps_preferences_df.cap == cap) &
@@ -115,11 +117,16 @@ def introduce_unitats_preferences(place):
         columns[0].write(cap)
         for j, col in enumerate(columns):
             if j > 0:
-                col.slider(label='', min_value=0, max_value=5, step=1, key=f'unitat_preference_{i}_{j}',
+                unitat = unitats[j - 1]
+                unitat_preference_key = f'unitat_preference_{i}_{j}'
+                current_value = look_in_table('unitats_preferences_df', 'cap', cap, col_to_look='preference',
+                                              extra_col_to_match='unitat_to_evaluate', extra_match=unitat)
+                st.session_state[unitat_preference_key] = current_value if not pd.isnull(current_value) else 0
+                col.slider(label='', min_value=0, max_value=5, step=1, key=unitat_preference_key,
                            on_change=insert_info,
                            kwargs={'table_name': 'unitats_preferences_df', 'col_to_add': 'preference',
-                                   'col_to_match': 'cap', 'match': cap, 'key': f'unitat_preference_{i}_{j}',
-                                   'extra_col_to_match': 'unitat_to_evaluate', 'extra_match': unitats[j - 1]})
+                                   'col_to_match': 'cap', 'match': cap, 'key': unitat_preference_key,
+                                   'extra_col_to_match': 'unitat_to_evaluate', 'extra_match': unitat})
 
 
 def introduce_caps_preferences(place):
@@ -136,12 +143,28 @@ def introduce_caps_preferences(place):
         cap_col.markdown(f'##')
         cap_col.write(cap)
         caps_to_evaluate = set(caps).difference({cap})
-        positive_preferences.multiselect(label='', options=caps_to_evaluate, key=f'positive_caps_{i}',
+        # TODO: com fer que els valors seleccionats es mantinguin si canviem les pestanyes?
+
+        positive_key = f'positive_caps_{i}'
+        negative_key = f'negative_caps_{i}'
+
+        st.session_state[positive_key] = st.session_state.caps_preferences_df.loc[
+            (st.session_state.caps_preferences_df.cap == cap) &
+            (st.session_state.caps_preferences_df.preference > 0),
+            'cap_to_evaluate'
+        ].values.tolist()
+        st.session_state[negative_key] = st.session_state.caps_preferences_df.loc[
+            (st.session_state.caps_preferences_df.cap == cap) &
+            (st.session_state.caps_preferences_df.preference < 0),
+            'cap_to_evaluate'
+        ].values.tolist()
+
+        positive_preferences.multiselect(label='', options=caps_to_evaluate, key=positive_key,
                                          on_change=insert_multi_select,
-                                         kwargs={'sign': 1, 'cap': cap, 'key': f'positive_caps_{i}'})
-        negative_preferences.multiselect(label='', options=caps_to_evaluate, key=f'negative_caps_{i}',
+                                         kwargs={'sign': 1, 'cap': cap, 'key': positive_key})
+        negative_preferences.multiselect(label='', options=caps_to_evaluate, key=negative_key,
                                          on_change=insert_multi_select,
-                                         kwargs={'sign': -1, 'cap': cap, 'key': f'negative_caps_{i}'})
+                                         kwargs={'sign': -1, 'cap': cap, 'key': negative_key})
 
 
 def introduce_caps_preferences_advanced(place):
@@ -156,15 +179,7 @@ def inputs():
         """
     )
 
-    initialize_session_state()
-    raw_inputs = {
-        'caps_df': st.session_state.caps_df,
-        'unitats_df': st.session_state.unitats_df,
-        'caps_preferences_df': st.session_state.caps_preferences_df,
-        'unitats_preferences_df': st.session_state.unitats_preferences_df
-    }
-    for a, b in raw_inputs.items():
-        st.write(a, b)
+    # print_tables_for_debug()
 
     introduce_unitats_names = st.expander(label="Llista d'unitats")
     introduce_caps_names = st.expander(label="Llista de caps")
@@ -180,11 +195,15 @@ def inputs():
     introduce_caps_preferences_advanced(place=caps_preferences_advanced)
 
 
-def create_table(table_name, cols):
-    table = pd.DataFrame()
-    for col in cols:
-        table[col] = []
-    st.session_state[table_name] = table
+def print_tables_for_debug():
+    raw_inputs = {
+        'caps_df': st.session_state.caps_df,
+        'unitats_df': st.session_state.unitats_df,
+        'caps_preferences_df': st.session_state.caps_preferences_df,
+        'unitats_preferences_df': st.session_state.unitats_preferences_df
+    }
+    for a, b in raw_inputs.items():
+        st.write(a, b)
 
 
 def insert_cau_normal():
@@ -212,19 +231,47 @@ def delete_cap(cap):
                 st.session_state.caps_preferences_df.cap_to_evaluate != cap)]
 
 
-def initialize_session_state():
-    if 'caps' not in st.session_state:
-        st.session_state.caps = []
-    if 'unitats' not in st.session_state:
-        st.session_state.unitats = []
-    if 'caps_df' not in st.session_state:
-        create_table('caps_df', ['cap', 'year', 'gender', 'experience'])
-    if 'unitats_df' not in st.session_state:
-        create_table('unitats_df', ['unitat', 'min_caps', 'max_caps'])
-    if 'unitats_preferences_df' not in st.session_state:
-        create_table('unitats_preferences_df', ['cap', 'unitat_to_evaluate', 'preference'])
-    if 'caps_preferences_df' not in st.session_state:
-        create_table('caps_preferences_df', ['cap', 'cap_to_evaluate', 'preference'])
+def add_caps_lldg():
+    caps_lldg = [
+        ('Berta Zanuy', 4, 'Femení'),
+        ('Helena Serra', 4, 'Femení'),
+        ('Quim Rabella', 4, 'Masculí'),
+        ('Clara Hosta', 4, 'Femení'),
+        ('Eli Crego', 3, 'Femení'),
+        ('Mateu Salvà', 3, 'Masculí'),
+        ('Gina Pallares', 3, 'Femení'),
+        ('Gerard Frigola', 3, 'Masculí'),
+        ('Mia Losantos', 2, 'Femení'),
+        ('Clara Estrada', 2, 'Femení'),
+        ('Sara Bonal', 2, 'Femení'),
+        ('Júlia Franquesa', 2, 'Femení'),
+        ('Mar Rovira', 2, 'Femení'),
+        ('Arnau Escolà', 1, 'Masculí'),
+        ('Pol Mer', 1, 'Masculí'),
+        ('Lluc Roda', 1, 'Masculí'),
+        ('Marta Rovira', 1, 'Femení'),
+        ('Simone Garcia', 1, 'Femení'),
+        ('Maurici Rabella', 1, 'Masculí'),
+        ('Max Font', 1, 'Masculí'),
+    ]
+    for cap, year, gender in caps_lldg:
+        add_new_cap(new_cap=cap)
+        insert_info(col_to_add='year', col_to_match='cap', match=cap, table_name='caps_df', value=year)
+        insert_info(col_to_add='gender', col_to_match='cap', match=cap, table_name='caps_df', value=gender)
+
+
+def look_in_table(table_name, col_to_match, match, col_to_look, extra_col_to_match=None, extra_match=None):
+    if extra_col_to_match is None:
+        return st.session_state[table_name].loc[
+            st.session_state[table_name][col_to_match] == match,
+            col_to_look
+        ].iloc[0]
+    else:
+        return st.session_state[table_name].loc[
+            (st.session_state[table_name][col_to_match] == match) &
+            (st.session_state[table_name][extra_col_to_match] == extra_match),
+            col_to_look
+        ].iloc[0]
 
 
 def introduce_unitats_list(place):
@@ -248,13 +295,19 @@ def introduce_unitats_list(place):
         write_in_color(name_col, unitat, auto_detect_color=True)
         delete_col.button('Esborra', on_click=delete_unitat, key=f'delete_unitat_{i}',
                           kwargs={'unitat': unitat})
+
+        min_caps_key = f'min_caps_{i}'
+        max_caps_key = f'max_caps_{i}'
+        st.session_state[min_caps_key] = look_in_table('unitats_df', 'unitat', unitat, 'min_caps')
+        st.session_state[max_caps_key] = look_in_table('unitats_df', 'unitat', unitat, 'max_caps')
+
         min_caps.number_input('', min_value=1, max_value=10, on_change=insert_info,
-                              kwargs={'col_to_add': 'year', 'col_to_match': 'unitat', 'match': unitat,
-                                      'key': f'min_caps_{i}', 'table_name': 'unitats_df'}, key=f'min_caps_{i}',
+                              kwargs={'col_to_add': 'min_caps', 'col_to_match': 'unitat', 'match': unitat,
+                                      'key': min_caps_key, 'table_name': 'unitats_df'}, key=f'min_caps_{i}',
                               help='mínim de caps per portar la unitat?')
         max_caps.number_input('', min_value=1, max_value=10, on_change=insert_info,
-                              kwargs={'col_to_add': 'gender', 'col_to_match': 'unitat', 'match': unitat,
-                                      'key': f'max_caps_{i}', 'table_name': 'unitats_df'}, key=f'max_caps_{i}',
+                              kwargs={'col_to_add': 'max_caps', 'col_to_match': 'unitat', 'match': unitat,
+                                      'key': max_caps_key, 'table_name': 'unitats_df'}, key=f'max_caps_{i}',
                               help='màxim de caps per portar la unitat?')
 
 
@@ -263,6 +316,7 @@ def introduce_caps_list(place):
 
     col_1.text_input('Nom del/la cap:', key='new_cap', on_change=add_new_cap)
     # TODO: alguna manera de no haver d'escriure els caps tota l'estona?
+    col_2.button('Som AE Lluïsos de Gràcia', on_click=add_caps_lldg)
     col_3.button('Reset', key='reset_names', on_click=reset_table,
                  kwargs={'to_reset': ['caps_df', 'caps', 'caps_preferences_df']})
     col_3.write(f"Nombre de caps introduïts: {len(st.session_state.caps)}")
@@ -278,16 +332,25 @@ def introduce_caps_list(place):
         write_in_color(name_col, cap, 'gray')
         delete_col.button('Esborra', on_click=delete_cap, key=f'delete_cap_{i}',
                           kwargs={'cap': cap})
+        year_key = f'year_value_{i}'
+        gender_key = f'gender_value_{i}'
+        experience_key = f'experience_number_{i}'
+        st.session_state[year_key] = look_in_table('caps_df', 'cap', cap, 'year')
+        st.session_state[gender_key] = look_in_table('caps_df', 'cap', cap, 'gender')
+        exp_state = look_in_table('caps_df', 'cap', cap, 'experience')
+        st.session_state[experience_key] = [] if pd.isnull(exp_state) else exp_state.split(', ')
+
         any_col.number_input('', min_value=1, max_value=10, on_change=insert_info,
                              kwargs={'col_to_add': 'year', 'col_to_match': 'cap', 'match': cap,
-                                     'key': f'year_value_{i}', 'table_name': 'caps_df'}, key=f'year_value_{i}',
+                                     'key': year_key, 'table_name': 'caps_df'}, key=year_key,
                              help='és cap de 1r, 2n, 3r any...')
         gender_col.selectbox('', options=['Femení', 'Masculí', 'Altres'], on_change=insert_info,
                              kwargs={'col_to_add': 'gender', 'col_to_match': 'cap', 'match': cap,
-                                     'key': f'gender_value_{i}', 'table_name': 'caps_df'}, key=f'gender_value_{i}')
+                                     'key': gender_key, 'table_name': 'caps_df'}, key=gender_key)
         current_unitats = st.session_state.unitats_df.unitat.unique().tolist()
-        help_message = "quines unitats ha portat altres anys? Omple abans la llista d'unitats"
+        help_message = "L'OPTIMITZADOR ENCARA NO HO SUPORTA. " \
+                       "quines unitats ha portat altres anys? Omple abans la llista d'unitats"
         experience_col.multiselect(label='', options=current_unitats, on_change=insert_info,
                                    kwargs={'col_to_add': 'experience', 'col_to_match': 'cap', 'match': cap,
-                                           'key': f'experience_number_{i}', 'table_name': 'caps_df'},
-                                   key=f'experience_number_{i}', help=help_message)
+                                           'key': experience_key, 'table_name': 'caps_df'},
+                                   key=experience_key, help=help_message, disabled=True)

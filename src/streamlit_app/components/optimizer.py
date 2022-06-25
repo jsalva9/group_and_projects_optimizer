@@ -6,6 +6,7 @@ from optimizer.optimizer import Optimizer
 
 
 def run_optimizer(scale_preferences=False):
+
     # TODO: introduir a algun lloc el tema scale preferences
     config = Config()
     data_control = DataControl(config)
@@ -36,19 +37,42 @@ def display_results(place, solution):
             columns[i].write(cap)
 
 
+def opti_checks(place):
+    some_caps = len(st.session_state.caps) > 0
+    if not some_caps:
+        place.warning('No hi ha caps introduïts')
+    some_unitats = len(st.session_state.unitats) > 0
+    if not some_unitats:
+        place.warning('No hi ha unitats introduïdes')
+    some_cap_cap_preference = st.session_state.caps_preferences_df.preference.sum() > 0
+    if some_caps and not some_cap_cap_preference:
+        place.warning('No hi ha preferències cap-cap')
+    some_cap_unitat_preference = st.session_state.unitats_preferences_df.preference.sum() > 0
+    if some_caps and some_unitats and some_cap_unitat_preference:
+        place.warning('No hi ha preferències cap-unitat')
+    return some_caps and some_unitats and some_cap_cap_preference and some_cap_unitat_preference
+
+
 def optimizer():
     st.header('Resultats: equips de caps')
+    run_place = st.container()
     results_place = st.container()
 
-    save_to_csv = st.button('Save to CSV')
+    # TODO: remove, this is for testing purposes
+    save_to_csv = st.button('Save inputs to CSV (testing)')
     if save_to_csv:
         st.session_state.caps_df.to_csv(f'data/raw/inputed_in_app/caps_df.csv', index=False)
         st.session_state.unitats_df.to_csv(f'data/raw/inputed_in_app/unitats_df.csv', index=False)
         st.session_state.caps_preferences_df.to_csv(f'data/raw/inputed_in_app/caps_preferences_df.csv', index=False)
         st.session_state.unitats_preferences_df.to_csv(f'data/raw/inputed_in_app/unitats_preferences_df.csv', index=False)
 
-    solution = run_optimizer()
 
-    display_results(results_place, solution)
-
+    good_to_run = opti_checks(run_place)
+    run_button = run_place.button('Fes els equips!')
+    if run_button:
+        if not good_to_run:
+            run_place.error('Falten inputs per poder executar!')
+        else:
+            solution = run_optimizer()
+            display_results(results_place, solution)
 
