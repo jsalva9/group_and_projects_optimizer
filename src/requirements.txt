@@ -1,0 +1,6 @@
+pyyaml
+pandas
+openpyxl
+regex
+ortools
+streamlit
