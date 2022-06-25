@@ -54,13 +54,17 @@ def opti_checks(place):
     return some_caps and some_unitats and some_cap_cap_preference and some_cap_unitat_preference
 
 
+def set_fixed_caps(key, unitat):
+    st.session_state.fixed_caps[unitat] = st.session_state[key]
+
+
 def optimizer():
     st.header('Resultats: equips de caps')
+    save_to_csv = st.button('Save inputs to CSV (testing)')
     run_place = st.container()
     results_place = st.container()
 
     # TODO: remove, this is for testing purposes
-    save_to_csv = st.button('Save inputs to CSV (testing)')
     if save_to_csv:
         st.session_state.caps_df.to_csv(f'data/raw/inputed_in_app/caps_df.csv', index=False)
         st.session_state.unitats_df.to_csv(f'data/raw/inputed_in_app/unitats_df.csv', index=False)
@@ -72,27 +76,41 @@ def optimizer():
     good_to_run = opti_checks(run_place)
     run_button = run_place.button('Fes els equips!')
 
+    if len(st.session_state.unitats) == 0:
+        return
     unitat_cols = results_place.columns(len(st.session_state.unitats))
 
     for i, unitat_col in enumerate(unitat_cols):
         # unitat_col.custom_write(st.session_state.unitat[i])
-        unitat_col.multiselect(f'Caps fixats a {st.session_state.unitats[i]}', options=st.session_state.caps,
-                               key=f'fixed_caps_{i}')
+        unitat = st.session_state.unitats[i]
+        fixed_caps_key = f'fixed_caps_{i}'
+        available_caps = set(st.session_state.caps).difference(
+            set([cap for u in st.session_state.unitats for cap in st.session_state.fixed_caps[u] if u != unitat]))
+        unitat_col.multiselect(f'Caps fixats a {unitat}', options=available_caps, key=fixed_caps_key,
+                               on_change=set_fixed_caps, kwargs={'unitat': unitat, 'key': fixed_caps_key},
+                               default=st.session_state.fixed_caps[unitat])
 
-    if run_button:
-        if not good_to_run:
-            run_place.error('Falten inputs per poder executar!')
-        else:
-            solution = run_optimizer()
-            display_results(results_place, solution)
+    unitat_cols = results_place.columns(len(st.session_state.unitats))
+    for i, unitat_col in enumerate(unitat_cols):
+        unitat = st.session_state.unitats[i]
+        custom_write(unitat_col, unitat, align='center', bold=True, auto_detect_color=True)
+        for cap in st.session_state.fixed_caps[unitat]:
+            custom_write(unitat_col, cap, align='center', color='black')
 
 
-def print_tables_for_debug():
-    raw_inputs = {
-        'caps_df': st.session_state.caps_df,
-        'unitats_df': st.session_state.unitats_df,
-        'caps_preferences_df': st.session_state.caps_preferences_df,
-        'unitats_preferences_df': st.session_state.unitats_preferences_df
-    }
-    for a, b in raw_inputs.items():
-        st.write(a, b)
+    # if run_button:
+    #     if not good_to_run:
+    #         run_place.error('Falten inputs per poder executar!')
+    #     else:
+    #         solution = run_optimizer()
+    #         display_results(results_place, solution)
+
+    def print_tables_for_debug():
+        raw_inputs = {
+            'caps_df': st.session_state.caps_df,
+            'unitats_df': st.session_state.unitats_df,
+            'caps_preferences_df': st.session_state.caps_preferences_df,
+            'unitats_preferences_df': st.session_state.unitats_preferences_df
+        }
+        for a, b in raw_inputs.items():
+            st.write(a, b)

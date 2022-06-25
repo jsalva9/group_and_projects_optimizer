@@ -32,10 +32,13 @@ def reset_table(to_reset):
     for element in to_reset:
         if type(st.session_state[element]) is list:
             st.session_state[element] = []
-        else:
+        if type(st.session_state[element]) is pd.DataFrame:
             # has to be pd.DataFrame
             st.session_state[element].drop(st.session_state[element].index, inplace=True)
-
+        if type(st.session_state[element]) is dict:
+            st.session_state[element] = {}
+        else:
+            assert False, 'Trying to reset element that is not a list, pd.DataFrame or dictionary'
 
 def insert_info(table_name, col_to_add, col_to_match, match, key=None, extra_col_to_match=None, extra_match=None,
                 value=None):
@@ -72,6 +75,9 @@ def add_new_unitat(key=None, value=None):
                                                                    how='cross')
     st.session_state.unitats_preferences_df = pd.concat([st.session_state.unitats_preferences_df, to_add_1])
 
+    # Update fixed_caps
+    st.session_state.fixed_caps[value] = []
+
 
 def insert_multi_select(cap, sign, key):
     preferences_list = st.session_state[key]
@@ -94,7 +100,7 @@ def introduce_unitats_preferences(place):
     columns = place.columns(len(unitats) + 1)
     for j, col in enumerate(columns):
         if j > 0:
-            custom_write(col, str(unitats[j - 1]), bold=True, align='center')
+            custom_write(col, str(unitats[j - 1]), bold=True, align='center', auto_detect_color=True)
     place.markdown('---')
     for i, cap in enumerate(st.session_state.caps):
         columns = place.columns(len(unitats) + 1)
@@ -204,6 +210,8 @@ def delete_unitat(unitat):
     st.session_state.unitats_preferences_df = st.session_state.unitats_preferences_df[
         st.session_state.unitats_preferences_df.unitat_to_evaluate != unitat]
 
+    del st.session_state.fixed_caps[unitat]
+
 
 def delete_cap(cap):
     if cap in st.session_state.caps:
@@ -271,7 +279,7 @@ def introduce_unitats_list(place):
                  on_click=insert_cau_normal)
     col_3.write(f"Nombre d'unitats introduïdes: {len(st.session_state.unitats)}")
     col_3.button('Reset', key='reset_unitats', on_click=reset_table,
-                 kwargs={'to_reset': ['unitats_df', 'unitats', 'unitats_preferences_df']})
+                 kwargs={'to_reset': ['unitats_df', 'unitats', 'unitats_preferences_df', 'fixed_caps']})
     place.markdown('---')
     name_col, delete_col, min_caps, max_caps = place.columns(4)
     custom_write(name_col, 'Unitat', align='right', bold=True)
