@@ -1,0 +1,16 @@
+execution:
+  etl: True
+  optimizer: True
+
+directories:
+  data: data
+  raw: raw
+  transformed: transformed
+  output: output
+
+file_names:
+  preferences: 'Respostes formulari de la tria de caps - Respostes al formulari 1.csv'
+  master: 'master.xlsx'
+
+optimization:
+  equip_de_caps_weight: 0.5
