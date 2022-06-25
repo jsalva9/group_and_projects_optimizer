@@ -65,9 +65,10 @@ class Optimizer:
         unitats = {i: [x[i, k] * self._data_model.unitats_cost[i, k]
                        for k in self._data_model.unitat_ids] for i in self._data_model.cap_ids}
         equip_de_caps_weight = self._config.optimization['equip_de_caps_weight']
-        happiness_stats = {
-            i: solver.Value(equip_de_caps_weight * sum(equips[i]) + (1 - equip_de_caps_weight) * sum(unitats[i]))
-            for i in self._data_model.cap_ids}
+        happiness_stats = {}
+        for i in self._data_model.cap_ids:
+            happiness = equip_de_caps_weight * sum(equips[i]) + (1 - equip_de_caps_weight) * sum(unitats[i])
+            happiness_stats[i] = happiness if type(happiness) in [float, int] else solver.Value(happiness)
         return happiness_stats, solution_values
 
     def define_objective_function(self, model, x: dict, y: dict) -> None:

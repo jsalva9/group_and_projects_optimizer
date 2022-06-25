@@ -95,14 +95,16 @@ class DataControl:
         master_caps = master_caps.reset_index().rename(columns={'index': 'cap_id'})
         master_unitats = master_unitats.reset_index().rename(columns={'index': 'unitat_id'})
 
-        # preferences_unitats.rename(columns={'unitat': 'unitat_to_evaluate'}, inplace=True)
+        preferences_caps['preference'] = preferences_caps['positive_preference'] + \
+                                         preferences_caps['negative_preference']
+        preferences_caps.drop(columns=['positive_preference', 'negative_preference'], inplace=True)
 
         # FillNA
         master_caps['year'].fillna(1, inplace=True)
         master_caps['gender'].fillna('NA', inplace=True)
         master_caps['experience'].fillna('', inplace=True)
-        master_unitats['min_caps'] = master_unitats['min_caps'].fillna(1).astype(int)
-        master_unitats['max_caps'] = master_unitats['max_caps'].fillna(1e2).astype(int)
+        master_unitats['min_caps'] = master_unitats['min_caps'].fillna(2).astype(int)
+        master_unitats['max_caps'] = master_unitats['max_caps'].fillna(6).astype(int)
 
         preferences_caps = preferences_caps.merge(master_caps[['cap', 'cap_id']], how='left', on='cap').merge(
             master_caps[['cap', 'cap_id']].rename(columns={'cap': 'cap_to_evaluate', 'cap_id': 'cap_to_evaluate_id'}),
