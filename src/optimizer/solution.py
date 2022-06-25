@@ -21,7 +21,7 @@ class Solution:
         for key, val in self._equips_de_caps.items():
             print(f" - {key}: {', '.join(cap for cap in val)}")
 
-    def print_stats(self) -> None:
+    def get_stats(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
         print('Happiness by cap:')
         by_cap = self._solution_table[['cap', 'unitat', 'happiness']].sort_values(by='happiness', ascending=False)
         by_cap['happiness_percent'] = by_cap['happiness'] / by_cap['happiness'].sum() * 100
@@ -32,6 +32,7 @@ class Solution:
             team_happiness=('happiness', 'sum')).sort_values(by='team_happiness', ascending=False)
         by_unitat['happiness_percent'] = by_unitat['team_happiness'] / by_unitat['team_happiness'].sum() * 100
         print(by_unitat)
+        return by_cap, by_unitat
 
     @property
     def unitat_by_cap(self):

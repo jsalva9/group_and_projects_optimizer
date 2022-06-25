@@ -1,3 +1,5 @@
+import pandas as pd
+
 
 class DataModel:
     def __init__(self, master_caps, master_unitats, preferences_caps, preferences_unitats):
@@ -13,6 +15,9 @@ class DataModel:
         self._min_caps = {}
         self._max_caps = {}
         self._year = {}
+        self._fixed_unitat = {}
+        self._male = {}
+        self._female = {}
 
     def create_data_model(self):
         self._cap_ids = self._master_caps.cap_id.values.tolist()
@@ -26,6 +31,10 @@ class DataModel:
 
         for row in self._master_caps.itertuples():
             self._year[row.cap_id] = row.year
+            self._male[row.cap_id] = 1 if row.gender == 'Masculí' else 0
+            self._female[row.cap_id] = 0 if row.gender == 'Masculí' else 1
+            if not pd.isnull(row.fixed_unitat_id):
+                self._fixed_unitat[row.cap_id] = row.fixed_unitat_id
 
         for row in self._master_unitats.itertuples():
             self._min_caps[row.unitat_id] = row.min_caps
@@ -66,3 +75,15 @@ class DataModel:
     @property
     def master_unitats(self):
         return self._master_unitats
+
+    @property
+    def fixed_unitat(self):
+        return self._fixed_unitat
+
+    @property
+    def male(self):
+        return self._male
+
+    @property
+    def female(self):
+        return self._female

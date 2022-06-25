@@ -1,6 +1,6 @@
 import pandas as pd
 
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Union
 
 from optimizer.solution import Solution
 from optimizer.data_model import DataModel
@@ -16,19 +16,21 @@ class Optimizer:
         self._data_model = DataModel(**inputs)
         self._data_model.create_data_model()
 
-    def run(self) -> Solution:
+    def run(self) -> Union[Solution, None]:
         print(f'Running optimizer...')
         model = cp_model.CpModel()
 
         x, y = self.define_variables(model)
         self.define_constraints(model, x, y)
         self.define_objective_function(model, x, y)
-        happiness_stats, solution_values = self.solve(model, x, y)
-        solution_table = self.extract_solution(solution_values, happiness_stats)
+        solver_return = self.solve(model, x, y)
+        if solver_return is None:
+            return None
+        solution_table = self.extract_solution(solver_return[1], solver_return[0])
 
         solution = Solution(solution_table)
         solution.print_equips()
-        solution.print_stats()
+        by_cap, by_unitat = solution.get_stats()
 
         return solution
 
@@ -48,12 +50,14 @@ class Optimizer:
         solution['happiness'] = solution['cap_id'].apply(lambda id: happiness_stats[id])
         return solution
 
-    def solve(self, model, x, y) -> Tuple[Dict[int, float], Dict[Tuple[int, int], int]]:
+    def solve(self, model, x, y) -> Union[Tuple[Dict[int, float], Dict[Tuple[int, int], int]], None]:
         solver = cp_model.CpSolver()
         status = solver.Solve(model)
         translated_status = 'OPTIMAL' if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE else 'INFEASIBLE'
         print(f'-- {translated_status} solution --')
 
+        if translated_status == 'INFEASIBLE':
+            return None
         happiness_stats, solution_values = self.evaluate_expressions(solver, x, y)
 
         return happiness_stats, solution_values
@@ -93,6 +97,13 @@ class Optimizer:
         for k in self._data_model.unitat_ids:
             model.Add(sum([x[i, k] for i in self._data_model.cap_ids]) >= self._data_model.min_caps[k])
             model.Add(sum([x[i, k] for i in self._data_model.cap_ids]) <= self._data_model.max_caps[k])
+        # Unitat fixada
+        for i, k in self._data_model.fixed_unitat.items():
+            model.Add(x[i, k] == 1)
+        # Almenys un noi i una noia
+        for k in self._data_model.unitat_ids:
+            model.Add(sum([x[i, k] * self._data_model.male[i] for i in self._data_model.cap_ids]) >= 1)
+            model.Add(sum([x[i, k] * self._data_model.female[i] for i in self._data_model.cap_ids]) >= 1)
         # TODO: Dues persones no van juntes
         # TODO: Dues persones si que van juntes
         # TODO: Un mínim d'experiència per equip

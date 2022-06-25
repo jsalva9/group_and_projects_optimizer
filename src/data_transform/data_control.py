@@ -88,12 +88,21 @@ class DataControl:
         master_unitats = self._raw_inputs['unitats_df']
         preferences_caps = self._raw_inputs['caps_preferences_df']
         preferences_unitats = self._raw_inputs['unitats_preferences_df']
+        fixed_caps = self._raw_inputs['fixed_caps']
+
+        master_caps['fixed_unitat'] = pd.NA
+        for unitat, fixed_caps in fixed_caps.items():
+            for cap in fixed_caps:
+                master_caps.loc[master_caps.cap == cap, 'fixed_unitat'] = unitat
 
         master_caps.reset_index(drop=True, inplace=True)
         master_unitats.reset_index(drop=True, inplace=True)
 
         master_caps = master_caps.reset_index().rename(columns={'index': 'cap_id'})
         master_unitats = master_unitats.reset_index().rename(columns={'index': 'unitat_id'})
+
+        master_caps = master_caps.merge(master_unitats[['unitat', 'unitat_id']].rename(
+                columns={'unitat': 'fixed_unitat', 'unitat_id': 'fixed_unitat_id'}), on='fixed_unitat', how='left')
 
         preferences_caps['preference'] = preferences_caps['positive_preference'] + \
                                          preferences_caps['negative_preference']
