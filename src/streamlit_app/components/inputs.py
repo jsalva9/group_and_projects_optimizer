@@ -1,7 +1,6 @@
-
 import pandas as pd
 import streamlit as st
-from streamlit_app.utils import custom_write, endline
+from streamlit_app.utils import custom_write, endline, caps_lldg, POSITIVE_WEIGHT, NEGATIVE_WEIGHT
 
 
 def add_new_cap(new_cap=None):
@@ -32,13 +31,14 @@ def reset_table(to_reset):
     for element in to_reset:
         if type(st.session_state[element]) is list:
             st.session_state[element] = []
-        if type(st.session_state[element]) is pd.DataFrame:
-            # has to be pd.DataFrame
+        elif type(st.session_state[element]) is pd.DataFrame:
             st.session_state[element].drop(st.session_state[element].index, inplace=True)
-        if type(st.session_state[element]) is dict:
+        elif type(st.session_state[element]) is dict:
             st.session_state[element] = {}
         else:
-            assert False, 'Trying to reset element that is not a list, pd.DataFrame or dictionary'
+            assert False, f'Trying to reset {element}, an element of type {type(element)}. ' \
+                          f'It is not a list, pd.DataFrame or dictionary'
+
 
 def insert_info(table_name, col_to_add, col_to_match, match, key=None, extra_col_to_match=None, extra_match=None,
                 value=None):
@@ -79,17 +79,19 @@ def add_new_unitat(key=None, value=None):
     st.session_state.fixed_caps[value] = []
 
 
-def insert_multi_select(cap, sign, key):
+def insert_multi_select(cap, sign, key, level):
     preferences_list = st.session_state[key]
+    table = f'{level}s_preferences_df'
+    thing_to_evaluate = f'{level}_to_evaluate'
     pref_col = 'positive_preference' if sign > 0 else 'negative_preference'
-    st.session_state.caps_preferences_df.loc[
-        (st.session_state.caps_preferences_df.cap == cap)
+    st.session_state[table].loc[
+        (st.session_state[table].cap == cap)
         , pref_col] = 0
     for cap_to_evaluate in preferences_list:
-        st.session_state.caps_preferences_df.loc[
-            (st.session_state.caps_preferences_df.cap == cap) &
-            (st.session_state.caps_preferences_df.cap_to_evaluate == cap_to_evaluate)
-            , pref_col] += sign * 5
+        st.session_state[table].loc[
+            (st.session_state[table].cap == cap) &
+            (st.session_state[table][thing_to_evaluate] == cap_to_evaluate)
+            , pref_col] += sign * POSITIVE_WEIGHT if sign > 0 else sign * NEGATIVE_WEIGHT
 
 
 def introduce_unitats_preferences(place):
@@ -119,6 +121,53 @@ def introduce_unitats_preferences(place):
                            kwargs={'table_name': 'unitats_preferences_df', 'col_to_add': 'preference',
                                    'col_to_match': 'cap', 'match': cap, 'key': unitat_preference_key,
                                    'extra_col_to_match': 'unitat_to_evaluate', 'extra_match': unitat})
+
+
+def introduce_unitats_preferences_new(place):
+    explanation = 'Les unitats que no són preferides ni vetades són aquelles a les quals estaries disposat a anar.'
+    custom_write(place, explanation)
+    endline(place)
+
+    unitats = st.session_state.unitats
+    caps = st.session_state.caps
+    if len(unitats) == 0:
+        place.warning('Encara no hi ha cap unitat introduïda')
+        return
+    if len(caps) == 0:
+        place.warning('Encara no hi ha caps introduïts')
+        return
+
+    cap_col, positive_preferences, negative_preferences = place.columns([1, 1.5, 1.5])
+    #TODO: explicar que si no s'especifica res, hi podries anar
+    custom_write(positive_preferences, 'Unitats preferides', align='center', bold=True)
+    custom_write(negative_preferences, 'Unitats vetades', align='center', bold=True)
+
+    for i, cap in enumerate(caps):
+        cap_col, positive_preferences, negative_preferences = place.columns([1, 1.5, 1.5])
+        endline(cap_col)
+        custom_write(cap_col, cap, align='center', color='grey')
+        unitats_to_evaluate = set(unitats)
+
+        positive_key = f'positive_unitats_{i}'
+        negative_key = f'negative_unitats_{i}'
+
+        current_positive = st.session_state.unitats_preferences_df.loc[
+            (st.session_state.unitats_preferences_df.cap == cap) &
+            (st.session_state.unitats_preferences_df.positive_preference > 0),
+            'unitat_to_evaluate'
+        ].values.tolist()
+        current_negative = st.session_state.unitats_preferences_df.loc[
+            (st.session_state.unitats_preferences_df.cap == cap) &
+            (st.session_state.unitats_preferences_df.negative_preference < 0),
+            'unitat_to_evaluate'
+        ].values.tolist()
+
+        positive_preferences.multiselect(label='', options=unitats_to_evaluate, key=positive_key,
+                                         on_change=insert_multi_select, default=current_positive,
+                                         kwargs={'sign': 1, 'cap': cap, 'key': positive_key, 'level': 'unitat'})
+        negative_preferences.multiselect(label='', options=unitats_to_evaluate, key=negative_key,
+                                         on_change=insert_multi_select, default=current_negative,
+                                         kwargs={'sign': -1, 'cap': cap, 'key': negative_key, 'level': 'unitat'})
 
 
 def introduce_caps_preferences(place):
@@ -151,10 +200,10 @@ def introduce_caps_preferences(place):
 
         positive_preferences.multiselect(label='', options=caps_to_evaluate, key=positive_key,
                                          on_change=insert_multi_select, default=current_positive,
-                                         kwargs={'sign': 1, 'cap': cap, 'key': positive_key})
+                                         kwargs={'sign': 1, 'cap': cap, 'key': positive_key, 'level': 'cap'})
         negative_preferences.multiselect(label='', options=caps_to_evaluate, key=negative_key,
                                          on_change=insert_multi_select, default=current_negative,
-                                         kwargs={'sign': -1, 'cap': cap, 'key': negative_key})
+                                         kwargs={'sign': -1, 'cap': cap, 'key': negative_key, 'level': 'cap'})
 
 
 def introduce_caps_preferences_advanced(place):
@@ -180,7 +229,7 @@ def inputs():
 
     introduce_unitats_list(place=introduce_unitats_names)
     introduce_caps_list(place=introduce_caps_names)
-    introduce_unitats_preferences(place=unitats_preferences)
+    introduce_unitats_preferences_new(place=unitats_preferences)
     introduce_caps_preferences(place=caps_preferences)
     introduce_caps_preferences_advanced(place=caps_preferences_advanced)
 
@@ -226,29 +275,7 @@ def delete_cap(cap):
 
 
 def add_caps_lldg():
-    caps_lldg = [
-        ('Berta Zanuy', 4, 'Femení'),
-        ('Helena Serra', 4, 'Femení'),
-        ('Quim Rabella', 4, 'Masculí'),
-        ('Clara Hosta', 4, 'Femení'),
-        ('Eli Crego', 3, 'Femení'),
-        ('Mateu Salvà', 3, 'Masculí'),
-        ('Gina Pallares', 3, 'Femení'),
-        ('Gerard Frigola', 3, 'Masculí'),
-        ('Mia Losantos', 2, 'Femení'),
-        ('Clara Estrada', 2, 'Femení'),
-        ('Sara Bonal', 2, 'Femení'),
-        ('Júlia Franquesa', 2, 'Femení'),
-        ('Mar Rovira', 2, 'Femení'),
-        ('Arnau Escolà', 1, 'Masculí'),
-        ('Pol Mer', 1, 'Masculí'),
-        ('Lluc Roda', 1, 'Masculí'),
-        ('Marta Rovira', 1, 'Femení'),
-        ('Simone Garcia', 1, 'Femení'),
-        ('Maurici Rabella', 1, 'Masculí'),
-        ('Max Font', 1, 'Masculí'),
-        ('Ivet Roig', 1, 'Femení')
-    ]
+
     for cap, year, gender in caps_lldg:
         add_new_cap(new_cap=cap)
         insert_info(col_to_add='year', col_to_match='cap', match=cap, table_name='caps_df', value=year)
@@ -347,9 +374,10 @@ def introduce_caps_list(place):
         any_col.number_input('', min_value=1, max_value=10, on_change=insert_info,
                              kwargs={'col_to_add': 'year', 'col_to_match': 'cap', 'match': cap,
                                      'key': year_key, 'table_name': 'caps_df'}, key=year_key,
-                             help='és cap de 1r, 2n, 3r any...', value=int(current_year))
+                             help='és cap de 1r, 2n, 3r any...',
+                             value=int(current_year) if current_year is not None else 1)
         gender_options = ['Femení', 'Masculí', 'Altres']
-        index = gender_options.index(current_gender) if current_gender is not None else None
+        index = gender_options.index(current_gender) if current_gender is not None else 0
         gender_col.selectbox('', options=gender_options, on_change=insert_info,
                              kwargs={'col_to_add': 'gender', 'col_to_match': 'cap', 'match': cap,
                                      'key': gender_key, 'table_name': 'caps_df'}, key=gender_key, index=index)

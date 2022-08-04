@@ -29,12 +29,9 @@ def run_optimizer(scale_preferences=False):
         'unitats_preferences_df': st.session_state.unitats_preferences_df.copy(),
         'fixed_caps': st.session_state.fixed_caps.copy()
     }
-    # for a, b in raw_inputs.items():
-    #     st.write(a, b)
+
     data_control.set_raw_inputs(raw_inputs)
     data_control.transform_from_app_inputs()
-    # for a, b in data_control.transformed_inputs.items():
-    #     st.write(a, b)
 
     optimizer = Optimizer(config, data_control.transformed_inputs)
     solution = optimizer.run()
@@ -52,7 +49,8 @@ def opti_checks(place):
                               st.session_state.caps_preferences_df.negative_preference.sum() < 0
     if some_caps and not some_cap_cap_preference:
         place.warning('No hi ha preferències cap-cap')
-    some_cap_unitat_preference = st.session_state.unitats_preferences_df.preference.sum() > 0
+    some_cap_unitat_preference = st.session_state.unitats_preferences_df.positive_preference.sum() > 0 or \
+                                 st.session_state.unitats_preferences_df.negative_preference.sum() > 0
     if some_caps and some_unitats and not some_cap_unitat_preference:
         place.warning('No hi ha preferències cap-unitat')
     return some_caps and some_unitats and some_cap_cap_preference and some_cap_unitat_preference
@@ -76,7 +74,7 @@ def optimizer():
         st.session_state.caps_preferences_df.to_csv(f'data/raw/inputed_in_app/caps_preferences_df.csv', index=False)
         st.session_state.unitats_preferences_df.to_csv(f'data/raw/inputed_in_app/unitats_preferences_df.csv',
                                                        index=False)
-        pd.DataFrame({cap: [k] for (k, v) in st.session_state.fixed_caps.items() for cap in v })\
+        pd.DataFrame({cap: [k] for (k, v) in st.session_state.fixed_caps.items() for cap in v}) \
             .to_csv(f'data/raw/inputed_in_app/fixed_caps.csv', index=False)
     # print_tables_for_debug()
 

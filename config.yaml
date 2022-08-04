@@ -14,3 +14,9 @@ file_names:
 
 optimization:
   equip_de_caps_weight: 0.5
+  unitats_vetades_by_year:
+    1:
+      - Truk
+      - PiC
+    2:
+      - Truk

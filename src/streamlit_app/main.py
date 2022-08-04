@@ -28,9 +28,11 @@ def main():
         if 'unitats_df' not in st.session_state:
             create_table('unitats_df', ['unitat', 'min_caps', 'max_caps'])
         if 'unitats_preferences_df' not in st.session_state:
-            create_table('unitats_preferences_df', ['cap', 'unitat_to_evaluate', 'preference'])
+            create_table('unitats_preferences_df',
+                         ['cap', 'unitat_to_evaluate', 'positive_preference', 'negative_preference'])
         if 'caps_preferences_df' not in st.session_state:
-            create_table('caps_preferences_df', ['cap', 'cap_to_evaluate', 'positive_preference', 'negative_preference'])
+            create_table('caps_preferences_df',
+                         ['cap', 'cap_to_evaluate', 'positive_preference', 'negative_preference'])
         if 'fixed_caps' not in st.session_state:
             st.session_state.fixed_caps = {}
 

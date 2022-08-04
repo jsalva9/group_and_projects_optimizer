@@ -108,6 +108,10 @@ class DataControl:
                                          preferences_caps['negative_preference']
         preferences_caps.drop(columns=['positive_preference', 'negative_preference'], inplace=True)
 
+        preferences_unitats['preference'] = preferences_unitats['positive_preference'] + \
+                                         preferences_unitats['negative_preference']
+        preferences_unitats.drop(columns=['positive_preference', 'negative_preference'], inplace=True)
+
         # FillNA
         master_caps['year'].fillna(1, inplace=True)
         master_caps['gender'].fillna('NA', inplace=True)

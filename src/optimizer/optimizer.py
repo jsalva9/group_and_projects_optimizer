@@ -13,7 +13,7 @@ class Optimizer:
     def __init__(self, config, inputs):
         self._config = config
 
-        self._data_model = DataModel(**inputs)
+        self._data_model = DataModel(config, **inputs)
         self._data_model.create_data_model()
 
     def run(self) -> Union[Solution, None]:
@@ -104,6 +104,11 @@ class Optimizer:
         for k in self._data_model.unitat_ids:
             model.Add(sum([x[i, k] * self._data_model.male[i] for i in self._data_model.cap_ids]) >= 1)
             model.Add(sum([x[i, k] * self._data_model.female[i] for i in self._data_model.cap_ids]) >= 1)
+        # Unitats vetades per generacions de caps?
+        for i in self._data_model.cap_ids:
+            for year, unitats_vetades_ids in self._data_model.unitats_vetades_by_year.items():
+                model.Add(sum([x[i, k] * self._data_model.year_indicator[i, year] for k in unitats_vetades_ids]) == 0)
+
         # TODO: Dues persones no van juntes
         # TODO: Dues persones si que van juntes
         # TODO: Un mínim d'experiència per equip

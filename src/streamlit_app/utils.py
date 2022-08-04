@@ -5,6 +5,7 @@ ranguis_possible_names = ['RiNG', 'Ranguis', 'Ràngers', 'Rangers', 'Noies', 'Gu
 pios_possible_names = ['Pios', 'PiC', 'Pioners', 'pioners', 'caravel·les', 'carave', 'pios', 'pic', 'caraveles']
 truk_possible_names = ['truk', 'Truk', 'TRUK', 'trk']
 
+POSITIVE_WEIGHT, NEGATIVE_WEIGHT = 5, 50
 
 def custom_write(place, text: str, align: str = 'left', color: str = 'black', bold: bool = False, italic: bool = False,
                  auto_detect_color: bool = False):
@@ -42,3 +43,28 @@ def get_color(text):
     elif any(a in text for a in truk_possible_names):
         return 'green'
     return None
+
+
+caps_lldg = [
+        ('Berta Zanuy', 4, 'Femení'),
+        ('Helena Serra', 4, 'Femení'),
+        ('Quim Rabella', 4, 'Masculí'),
+        ('Clara Hosta', 4, 'Femení'),
+        ('Eli Crego', 3, 'Femení'),
+        ('Mateu Salvà', 3, 'Masculí'),
+        ('Gina Pallares', 3, 'Femení'),
+        ('Gerard Frigola', 3, 'Masculí'),
+        # ('Mia Losantos', 2, 'Femení'),
+        ('Clara Estrada', 2, 'Femení'),
+        ('Sara Bonal', 2, 'Femení'),
+        ('Júlia Franquesa', 2, 'Femení'),
+        ('Mar Rovira', 2, 'Femení'),
+        ('Arnau Escolà', 1, 'Masculí'),
+        ('Pol Mer', 1, 'Masculí'),
+        ('Lluc Roda', 1, 'Masculí'),
+        ('Marta Rovira', 1, 'Femení'),
+        ('Simone Garcia', 1, 'Femení'),
+        ('Maurici Rabella', 1, 'Masculí'),
+        ('Max Font', 1, 'Masculí'),
+        ('Ivet Roig', 1, 'Femení')
+    ]
