@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
-from streamlit_app.utils import custom_write, endline, caps_lldg, POSITIVE_WEIGHT, NEGATIVE_WEIGHT
+from streamlit_app.utils import custom_write, endline, caps_lldg, POSITIVE_WEIGHT, NEGATIVE_WEIGHT, default_min_caps, \
+    default_max_caps
 
 
 def add_new_cap(new_cap=None):
@@ -54,19 +55,22 @@ def insert_info(table_name, col_to_add, col_to_match, match, key=None, extra_col
             (st.session_state[table_name][extra_col_to_match] == extra_match), col_to_add] = element_to_add
 
 
-def add_new_unitat(key=None, value=None):
+def add_new_unitat(key=None, value=None, extra_arguments=None):
     if value is None:
         value = st.session_state[key]
 
     # Update unitats list
     st.session_state.unitats += [value]
 
+    df_dict = {'unitat': [value]}
+    if extra_arguments is not None:
+        extra_arguments = {k: [v] for k, v in extra_arguments.items()}
+        df_dict = {**df_dict, **extra_arguments}
+
     # Update unitats_df
     st.session_state.unitats_df = pd.concat([
         st.session_state.unitats_df,
-        pd.DataFrame({
-            'unitat': [value],
-        })
+        pd.DataFrame(df_dict)
     ])
     st.session_state.new_unitat = ''
 
@@ -97,7 +101,7 @@ def insert_multi_select(cap, sign, key, level):
 def introduce_unitats_preferences(place):
     unitats = st.session_state.unitats
     if len(unitats) == 0:
-        place.write('Encara no hi ha cap unitat introduïda')
+        place.warning('Encara no hi ha cap unitat introduïda')
         return
     columns = place.columns(len(unitats) + 1)
     for j, col in enumerate(columns):
@@ -138,7 +142,7 @@ def introduce_unitats_preferences_new(place):
         return
 
     cap_col, positive_preferences, negative_preferences = place.columns([1, 1.5, 1.5])
-    #TODO: explicar que si no s'especifica res, hi podries anar
+    # TODO: explicar que si no s'especifica res, hi podries anar
     custom_write(positive_preferences, 'Unitats preferides', align='center', bold=True)
     custom_write(negative_preferences, 'Unitats vetades', align='center', bold=True)
 
@@ -173,7 +177,7 @@ def introduce_unitats_preferences_new(place):
 def introduce_caps_preferences(place):
     caps = st.session_state.caps
     if not len(caps):
-        place.write('Encara no hi ha cap cap introduït')
+        place.warning('Encara no hi ha cap cap introduït')
         return
     cap_col, positive_preferences, negative_preferences = place.columns([1, 1.5, 1.5])
     custom_write(positive_preferences, 'Amb qui vol anar', align='center', bold=True)
@@ -248,7 +252,8 @@ def print_tables_for_debug():
 def insert_cau_normal():
     unitats = ['CiLL', 'LLiD', 'RiNG', 'PiC', 'Truk']
     for unitat in unitats:
-        add_new_unitat(value=unitat)
+        add_new_unitat(value=unitat,
+                       extra_arguments={'min_caps': default_min_caps[unitat], 'max_caps': default_max_caps[unitat]})
 
 
 def delete_unitat(unitat):
@@ -275,7 +280,6 @@ def delete_cap(cap):
 
 
 def add_caps_lldg():
-
     for cap, year, gender in caps_lldg:
         add_new_cap(new_cap=cap)
         insert_info(col_to_add='year', col_to_match='cap', match=cap, table_name='caps_df', value=year)
@@ -345,9 +349,9 @@ def introduce_caps_list(place):
     col_1.text_input('Nom del/la cap:', key='new_cap', on_change=add_new_cap)
     # TODO: alguna manera de no haver d'escriure els caps tota l'estona?
     col_2.button("Som l'AE Lluïsos de Gràcia", on_click=add_caps_lldg)
+    col_3.write(f"Nombre de caps introduïts: {len(st.session_state.caps)}")
     col_3.button('Reset', key='reset_names', on_click=reset_table,
                  kwargs={'to_reset': ['caps_df', 'caps', 'caps_preferences_df']})
-    col_3.write(f"Nombre de caps introduïts: {len(st.session_state.caps)}")
     place.markdown('---')
     name_col, delete_col, any_col, gender_col, experience_col = place.columns(5)
     custom_write(name_col, 'Nom', bold=True, align='right')

@@ -62,20 +62,20 @@ def set_fixed_caps(key, unitat):
 
 def optimizer():
     st.header('Resultats: equips de caps')
-    save_to_csv = st.button('Save inputs to CSV (testing)')
+    # save_to_csv = st.button('Save inputs to CSV (testing)')
     run_place = st.container()
 
     results_place = st.container()
     # TODO: remove, this is for testing purposes
 
-    if save_to_csv:
-        st.session_state.caps_df.to_csv(f'data/raw/inputed_in_app/caps_df.csv', index=False)
-        st.session_state.unitats_df.to_csv(f'data/raw/inputed_in_app/unitats_df.csv', index=False)
-        st.session_state.caps_preferences_df.to_csv(f'data/raw/inputed_in_app/caps_preferences_df.csv', index=False)
-        st.session_state.unitats_preferences_df.to_csv(f'data/raw/inputed_in_app/unitats_preferences_df.csv',
-                                                       index=False)
-        pd.DataFrame({cap: [k] for (k, v) in st.session_state.fixed_caps.items() for cap in v}) \
-            .to_csv(f'data/raw/inputed_in_app/fixed_caps.csv', index=False)
+    # if save_to_csv:
+    #     st.session_state.caps_df.to_csv(f'data/raw/inputed_in_app/caps_df.csv', index=False)
+    #     st.session_state.unitats_df.to_csv(f'data/raw/inputed_in_app/unitats_df.csv', index=False)
+    #     st.session_state.caps_preferences_df.to_csv(f'data/raw/inputed_in_app/caps_preferences_df.csv', index=False)
+    #     st.session_state.unitats_preferences_df.to_csv(f'data/raw/inputed_in_app/unitats_preferences_df.csv',
+    #                                                    index=False)
+    #     pd.DataFrame({cap: [k] for (k, v) in st.session_state.fixed_caps.items() for cap in v}) \
+    #         .to_csv(f'data/raw/inputed_in_app/fixed_caps.csv', index=False)
     # print_tables_for_debug()
 
     good_to_run = opti_checks(run_place)

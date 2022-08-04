@@ -46,25 +46,30 @@ def get_color(text):
 
 
 caps_lldg = [
-        ('Berta Zanuy', 4, 'Femení'),
-        ('Helena Serra', 4, 'Femení'),
-        ('Quim Rabella', 4, 'Masculí'),
-        ('Clara Hosta', 4, 'Femení'),
-        ('Eli Crego', 3, 'Femení'),
-        ('Mateu Salvà', 3, 'Masculí'),
-        ('Gina Pallares', 3, 'Femení'),
-        ('Gerard Frigola', 3, 'Masculí'),
-        # ('Mia Losantos', 2, 'Femení'),
-        ('Clara Estrada', 2, 'Femení'),
-        ('Sara Bonal', 2, 'Femení'),
-        ('Júlia Franquesa', 2, 'Femení'),
-        ('Mar Rovira', 2, 'Femení'),
-        ('Arnau Escolà', 1, 'Masculí'),
-        ('Pol Mer', 1, 'Masculí'),
-        ('Lluc Roda', 1, 'Masculí'),
-        ('Marta Rovira', 1, 'Femení'),
-        ('Simone Garcia', 1, 'Femení'),
-        ('Maurici Rabella', 1, 'Masculí'),
-        ('Max Font', 1, 'Masculí'),
-        ('Ivet Roig', 1, 'Femení')
-    ]
+    ('Berta Zanuy', 4, 'Femení'),
+    ('Helena Serra', 4, 'Femení'),
+    ('Quim Rabella', 4, 'Masculí'),
+    ('Clara Hosta', 4, 'Femení'),
+    ('Eli Crego', 3, 'Femení'),
+    ('Mateu Salvà', 3, 'Masculí'),
+    ('Gina Pallares', 3, 'Femení'),
+    ('Gerard Frigola', 3, 'Masculí'),
+    # ('Mia Losantos', 2, 'Femení'),
+    ('Clara Estrada', 2, 'Femení'),
+    ('Sara Bonal', 2, 'Femení'),
+    ('Júlia Franquesa', 2, 'Femení'),
+    ('Mar Rovira', 2, 'Femení'),
+    ('Arnau Escolà', 1, 'Masculí'),
+    ('Pol Mer', 1, 'Masculí'),
+    ('Lluc Roda', 1, 'Masculí'),
+    ('Marta Rovira', 1, 'Femení'),
+    ('Simone Garcia', 1, 'Femení'),
+    ('Maurici Rabella', 1, 'Masculí'),
+    ('Max Font', 1, 'Masculí'),
+    ('Ivet Roig', 1, 'Femení'),
+    ('Maria Salvà', 1, 'Femení'),
+    ('Amic Lluc Roda', 1, 'Masculí')
+]
+
+default_min_caps = {'CiLL': 4, 'LLiD': 4, 'RiNG': 4, 'PiC': 3, 'Truk': 2}
+default_max_caps = {'CiLL': 6, 'LLiD': 6, 'RiNG': 6, 'PiC': 5, 'Truk': 3}
