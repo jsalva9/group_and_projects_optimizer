@@ -24,5 +24,7 @@ Run the following Console commands:
 
 ### Modules of the project
 **Data Transform**: in charge of transforming the input provided by the user (tables) into the data model format required by the Optimizer (maps of constraint coefficients). 
+
 **Optimizer**: optimization engine that solves the optimization problem calling the ORTools *cpmodel* solver
+
 **Streamlit App**: defines the UI using the Streamlit package dashboarding tools. 
