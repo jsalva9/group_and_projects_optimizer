@@ -13,6 +13,20 @@ The app is deployed on the Streamlit cloud service. Can be accessed on this URL:
 https://jsalva9-group-and-projects-optimi-srcstreamlit-dashboard-wrtuc3.streamlit.app/
 
 ### Functionality and quick tutorial
+**Project definition and min/max number of members**: here we are asked to input the different projects and the min/max number of people that will work in project. Reset removes all the current projects. 
+![image](https://user-images.githubusercontent.com/38510928/217017582-70d29d59-2e83-48b7-9111-d7fa12c1a537.png)
+
+**Persons definition, experience, and gender**: here we are asked to input all the people that will be assigned to projects. We are asked about the experience years (just a value that measures experience), and this is related to a constraint in the optimization engine that forces all groups to have a minimum of experience. We are also asked about the gender, and that's because there's a constrain that forces all groups to have diversity (not all males or all females).
+![image](https://user-images.githubusercontent.com/38510928/217017518-94911390-12c1-40b7-a8fc-124f6e0985bf.png)
+
+**Project preferences**: Here we are asked to input, for each person, the project that they would like to work on (positive preferences) and projects wouln't like to work on (negative preferences). This has an impact on the objective function cost.
+![image](https://user-images.githubusercontent.com/38510928/217017837-d0f14f63-b706-47c8-bc85-bdd4ad07648d.png)
+
+**Personal preferences**: Here we are asked to input, for each person, the persons that he/she would like to work with, and the persons he/she wouldn't. This has an impact on the objective function cost.
+![image](https://user-images.githubusercontent.com/38510928/217018677-7e8a6684-2dcd-441a-a514-ccf3b2d33b17.png)
+
+**Optimization results**: There's an option to predefine some poeple in groups (that is a hard constraint that the optimizer will respect). After clicking on Run (Fes els equips!), the optimization engine is called and the solution is displayed. There's a warning if the problem is infeasible (has no solution). The percentage of team contribution into the objective optimal cost is displayed on the Happiness score under each team.
+![image](https://user-images.githubusercontent.com/38510928/217018810-d2bdc397-d80e-4ed7-89f4-1e28fc2a2784.png)
 
 
 ### How to install and run
