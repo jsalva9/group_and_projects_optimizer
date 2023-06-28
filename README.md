@@ -10,7 +10,7 @@ The two main blocks are an **optimization engine** built with ORTools, and a **u
 
 ### How to use
 The app is deployed on the Streamlit cloud service. Can be accessed on this URL: 
-https://jsalva9-group-and-projects-optimi-srcstreamlit-dashboard-wrtuc3.streamlit.app/
+[https://jsalva9-group-and-projects-optimi-srcstreamlit-dashboard-wrtuc3.streamlit.app/](https://groups-and-projects.streamlit.app/)
 
 ### Functionality and quick tutorial
 **Project definition and min/max number of members**: here we are asked to input the different projects and the min/max number of people that will work in project. Reset removes all the current projects. 
